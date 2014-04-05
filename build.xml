@@ -12,7 +12,8 @@
 
   <haxelib name="openfl" />
 
-  <assets path="assets" include="*" exclude="nme.svg" />
+  <assets path="assets" include="*" exclude="nme.svg" unless="flash" />
+  <assets path="assets" include="*" exclude="nme.svg|testPSD1.psd" if="flash" />
   
   <icon name="assets/nme.svg" />
 
