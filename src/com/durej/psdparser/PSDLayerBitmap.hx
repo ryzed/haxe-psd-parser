@@ -57,7 +57,7 @@ class PSDLayerBitmap
 				pixelDataSize += channelLenghtInfo.length;
 			}
 			//skip image data parsing for layer folders (for now)
-			fileData.position+= pixelDataSize;
+			fileData.position += pixelDataSize;
 			return;
 		}
 
@@ -88,10 +88,11 @@ class PSDLayerBitmap
 				return;
 			}
 			
-			var channelData:ByteArray = readColorPlane(i,height,width, channelLength);
+			var channelData:ByteArray = readColorPlane(i, height, width, channelLength);
 			
 			if (channelData.length == 0) return; //TODO fix this later				
 
+			
 			if (channelID == -1)
 			{
 				channels[A] = channelData; 
@@ -140,11 +141,13 @@ class PSDLayerBitmap
 				lineLengths[i] = fileData.readUnsignedShort();
 			}
 			//read compressed chanel data 
+			
+			var line:ByteArray = new ByteArray();
 			for(i in 0...height)
 			{
-				var line:ByteArray = new ByteArray();
+				line.length = 0;
 				fileData.readBytes( line, 0, lineLengths[i] );
-				imageData.writeBytes( unpack( line ) );
+				unpack( line, imageData );
 			}
 		}
 		else
@@ -157,7 +160,7 @@ class PSDLayerBitmap
 			else
 			{
 				//skip data
-				fileData.position+=channelLength;
+				fileData.position += channelLength;
 			}
 		}
 
@@ -165,12 +168,47 @@ class PSDLayerBitmap
 	}
 
 
+	
+	public function unpack( packed:ByteArray, imageData:ByteArray ):Void 
+	{
+		var i:Int;
+		var n:Int;
+		var byte:Int;
+		var count:Int;
+		
+		while ( packed.bytesAvailable > 0 ) // ???
+		{
+			n = packed.readByte();
+			
+			if ( n >= 0 ) 
+			{
+				count = n + 1;
+				
+				packed.readBytes(imageData, imageData.position, count);
+				imageData.position = imageData.position + count;
+			} 
+			else 
+			{
+				byte = packed.readByte();
+				
+				count = 1 - n;
+				for(i in 0...count)
+				{
+					imageData.writeByte( byte );
+				}
+			}
+		}
+		
+	}		
+
+	
+	
 
 	
 	private function renderImage( transparent:Bool = false ):Void 
 	{
-		if (transparent) image = new BitmapData( width, height, true, 0x00000000 );
-		else image = new BitmapData( width, height, false, 0x000000 );
+		var fillColor = transparent ? 0x00000000 : 0x000000;
+		image = new BitmapData(width, height, transparent, fillColor);
 		
 		var a:ByteArray = null;
 		var r:ByteArray = null;
@@ -199,68 +237,50 @@ class PSDLayerBitmap
 			b.position = 0;
 		}
 
-		//var color:UInt;
 		
-		for(y in 0...height)
+		var wdt = width;
+		var hgt = height;
+		
+		if (onlyTransparent)
 		{
-			for(x in 0...width)
+			for (y in 0...hgt)
 			{
-				if (onlyTransparent)
+				for (x in 0...wdt)
 				{
-					var color = a.readUnsignedByte();
-					image.setPixel32( x, y, color);
+					image.setPixel32( x, y, a.readUnsignedByte());
 				}
-				else
+			}
+		}
+		else
+		{
+			if (transparent)
+			{
+				for (y in 0...hgt)
 				{
-					if (transparent)
+					for (x in 0...wdt)
 					{
-						var color = a.readUnsignedByte() << 24 | r.readUnsignedByte() << 16 | g.readUnsignedByte() << 8 | b.readUnsignedByte();
-						image.setPixel32( x, y, color);
+						image.setPixel32( x, y, 
+							a.readUnsignedByte() << 24 | r.readUnsignedByte() << 16 | g.readUnsignedByte() << 8 | b.readUnsignedByte());
 					}
-					else
+				}
+			}
+			else
+			{
+				for (y in 0...hgt)
+				{
+					for (x in 0...wdt)
 					{
-						var color = r.readUnsignedByte() << 16 | g.readUnsignedByte() << 8 | b.readUnsignedByte();	
-						image.setPixel( x, y, color );
+						image.setPixel( x, y, 
+							r.readUnsignedByte() << 16 | g.readUnsignedByte() << 8 | b.readUnsignedByte() );
 					}
 				}
 			}
 		}
+		
+		
+		
 	}
 	
 	
 	
-	public function unpack( packed:ByteArray ):ByteArray 
-	{
-		var i:Int;
-		var n:Int;
-		var byte:Int;
-		var unpacked:ByteArray = new ByteArray();
-		var count:Int;
-		
-		while ( packed.bytesAvailable > 0 ) // ???
-		{
-			n = packed.readByte();
-			
-			if ( n >= 0 ) 
-			{
-				count = n + 1;
-				for(i in 0...count)
-				{
-					unpacked.writeByte( packed.readByte() );
-				}
-			} 
-			else 
-			{
-				byte = packed.readByte();
-				
-				count = 1 - n;
-				for(i in 0...count)
-				{
-					unpacked.writeByte( byte );
-				}
-			}
-		}
-		
-		return unpacked;
-	}		
 }

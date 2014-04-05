@@ -276,11 +276,12 @@ class PSDParser
 				{
 					var data = new ByteArray();
 					
+					var line:ByteArray = new ByteArray();
 					for(i in 0...canvas_height)
 					{
-						var line:ByteArray = new ByteArray();
-						fileData.readBytes( line, 0, lines[channel*canvas_height+i] );
-						data.writeBytes( unpack( line ) );
+						line.length = 0;
+						fileData.readBytes( line, 0, lines[channel * canvas_height + i] );
+						unpack(line, data);
 					}
 					channelsData_arr[channel] = data;
 				}				
@@ -291,34 +292,45 @@ class PSDParser
 				//break;
 		}
 		
-		//create composite bitmap out of byte array channels
-		composite_bmp = new BitmapData( canvas_width, canvas_height, false, 0x000000 );
-		
 		var r:ByteArray = channelsData_arr[0];
 		var g:ByteArray = channelsData_arr[1];
 		var b:ByteArray = channelsData_arr[2];
-		
 		r.position = 0;
 		g.position = 0;
 		b.position = 0;
 		
-		for(y in 0...canvas_height)
+		createCompositeBD(r, g, b);
+	}
+	
+	
+	function createCompositeBD(r:ByteArray, g:ByteArray, b:ByteArray):Void
+	{
+		//create composite bitmap out of byte array channels
+		var wdt = canvas_width;
+		var hgt = canvas_height;
+		
+		composite_bmp = new BitmapData( wdt, hgt, false, 0x000000 );
+		
+		for(y in 0...hgt)
 		{
-			for(x in 0...canvas_width)
+			for(x in 0...wdt)
 			{
-				var rgb:UInt = r.readUnsignedByte() << 16 | g.readUnsignedByte() << 8 | b.readUnsignedByte();
-				composite_bmp.setPixel( x, y, rgb );
+				composite_bmp.setPixel( x, y, r.readUnsignedByte() << 16 | g.readUnsignedByte() << 8 | b.readUnsignedByte() );
 			}
 		}
 	}
 	
+	
+	
+	
+	
 	//unpack byte array data
-	public function unpack( packed:ByteArray ):ByteArray 
+	
+	public function unpack( packed:ByteArray, imageData:ByteArray ):Void 
 	{
 		var i:Int;
 		var n:Int;
 		var byte:Int;
-		var unpacked:ByteArray = new ByteArray();
 		var count:Int;
 		
 		while ( packed.bytesAvailable > 0 ) // ???
@@ -328,10 +340,9 @@ class PSDParser
 			if ( n >= 0 ) 
 			{
 				count = n + 1;
-				for(i in 0...count)
-				{
-					unpacked.writeByte( packed.readByte() );
-				}
+				
+				packed.readBytes(imageData, imageData.position, count);
+				imageData.position = imageData.position + count;
 			} 
 			else 
 			{
@@ -340,14 +351,20 @@ class PSDParser
 				count = 1 - n;
 				for(i in 0...count)
 				{
-					unpacked.writeByte( byte );
+					imageData.writeByte( byte );
 				}
 			}
 		}
 		
-		return unpacked;
-	}	
+	}		
 
+	
+	
+	
+	
+	
+	
+	
 	//returns the read value and its length in format {str:value, length:size}
 	private function readPascalStringObj(): { str:String, length:UInt }
 	{
