@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+
+  <app file="PSDParser" title="PSDParser" main="Main" version="1.0.0" company="NME" />
+  
+  <window width="800" height="600" fps="60" resizable="true" />
+  <window width="0" height="0" orientation="portrait" if="mobile" />
+
+  <set name="BUILD_DIR" value="bin" />
+
+  <classpath name="src" />
+
+  <haxelib name="openfl" />
+
+  <assets path="assets" include="*" exclude="nme.svg" unless="flash" />
+  <assets path="assets" include="*" exclude="nme.svg|testPSD1.psd" if="flash" />
+  
+  <icon name="assets/nme.svg" />
+
+</project>

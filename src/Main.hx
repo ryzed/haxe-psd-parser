@@ -12,11 +12,14 @@ import flash.display.StageScaleMode;
 import flash.events.Event;
 import flash.events.MouseEvent;
 import flash.Lib;
+#if flash
 import flash.net.FileFilter;
 import flash.net.FileReference;
+#end
 import flash.text.TextField;
 import flash.text.TextFieldAutoSize;
 import flash.text.TextFormat;
+import openfl.Assets;
 
 /**
  * ...
@@ -25,11 +28,11 @@ import flash.text.TextFormat;
 
 class Main extends Sprite
 {
+	#if flash
 	private var file					: FileReference;
+	#end
 	private var psdParser				: PSDParser;
 	private var layersLevel				: Sprite;
-
-	
 	
 	static function main() 
 	{
@@ -37,7 +40,6 @@ class Main extends Sprite
 		stage.scaleMode = StageScaleMode.NO_SCALE;
 		stage.align = StageAlign.TOP_LEFT;
 		// entry point
-		
 		
 		var m = new Main();
 		stage.addChild(m);
@@ -52,8 +54,9 @@ class Main extends Sprite
 	
 	private function init(e:Event)
 	{
-		var wid = this.stage.stageWidth;
-		var hei = this.stage.stageHeight;
+		#if flash
+		var wid = Lib.current.stage.stageWidth;
+		var hei = Lib.current.stage.stageHeight;
 		
 		//draw shape and add it to sprite so that stage is clickable
 		var bg:Sprite = new Sprite();
@@ -90,8 +93,12 @@ class Main extends Sprite
 		
 		//click callback
 		this.addEventListener(MouseEvent.CLICK, loadPSD);
+		#else
+		parsePSDData(null);
+		#end
 	}
-
+	
+	#if flash
 	//load action must be perfomed on click due to the flash 10 security
 	function loadPSD(e:Event):Void
 	{
@@ -100,7 +107,6 @@ class Main extends Sprite
 		file.addEventListener(Event.SELECT, onFileSelected);
 		file.browse([new FileFilter("Photoshop Files","*.psd;")]); 
 	}
-		
 	
 	//after file has been selected , load it
 	function onFileSelected(event:Event):Void 
@@ -108,20 +114,25 @@ class Main extends Sprite
 		file.removeEventListener(Event.SELECT, onFileSelected);
 		file.addEventListener(Event.COMPLETE,parsePSDData);
 		file.load();
-		
-		
 	}
+	#end
 	
 	//after file has been loaded parse it	
 	function parsePSDData(event:Event):Void
 	{
 		psdParser = PSDParser.getInstance();
+		
+		#if flash
 		psdParser.parse(file.data);	
+		#else
+		var data = Assets.getBytes("assets/testPSD1.psd");
+		psdParser.parse(data);
+		#end
 		
 		layersLevel = new Sprite();
 		this.addChild(layersLevel);
-
-		for(i in 0...psdParser.allLayers.length)
+		
+		for (i in 0...psdParser.allLayers.length)
 		{
 			var psdLayer 		: PSDLayer			= psdParser.allLayers[i];
 			var layerBitmap_bmp : BitmapData 		= psdLayer.bmp;
@@ -130,14 +141,13 @@ class Main extends Sprite
 			layerBitmap.y 							= psdLayer.position.y;
 			layerBitmap.filters						= psdLayer.filters_arr;
 			layersLevel.addChild(layerBitmap);
-			
-			trace(psdLayer.name);
 		}
 		
 		//var compositeBitmap:Bitmap = new Bitmap(psdParser.composite_bmp);
 		//layersLevel.addChild(compositeBitmap);
-		
+		#if flash
 		this.removeEventListener(MouseEvent.CLICK, loadPSD);
+		#end
 		this.addEventListener(MouseEvent.CLICK, shuffleBitmaps);
 	}	
 
@@ -145,6 +155,4 @@ class Main extends Sprite
 	{
 		layersLevel.setChildIndex(layersLevel.getChildAt(0), layersLevel.numChildren-1);
 	}
-
-	
 }
