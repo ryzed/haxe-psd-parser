@@ -27,7 +27,7 @@ class PSDStructureNode
 	
 	inline public function isGroup():Bool
 	{
-		return (layer == null) ? true : (layer.type == PSDLayer.LayerType_FOLDER_OPEN);
+		return (layer == null) ? true : (layer.type == PSDLayer.LayerType_FOLDER_OPEN || layer.type == PSDLayer.LayerType_FOLDER_CLOSED);
 	}
 	inline public function isEndGroup():Bool
 	{

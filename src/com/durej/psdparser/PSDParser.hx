@@ -389,6 +389,9 @@ class PSDParser
 				case PSDLayer.LayerType_FOLDER_OPEN : // new folder
 					nodeStack.push(newNode); // it will be new parent
 					
+				case PSDLayer.LayerType_FOLDER_CLOSED : // new folder (closed)
+					nodeStack.push(newNode); // it will be new parent
+					
 				case PSDLayer.LayerType_HIDDEN : // end of folder
 					nodeStack.pop(); // group finished
 			}
