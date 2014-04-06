@@ -82,55 +82,62 @@ class PSDLayerBitmap
 			}
 			
 			
-			if ((width*height) == 0) //TODO fix this later
+			
+			
+			
+			if ((width * height) == 0) //TODO fix this later
 			{
 				var compression = fileData.readShort();
-				return;
 			}
-			
-			var channelData:ByteArray = readColorPlane(i, height, width, channelLength);
-			
-			if (channelData.length == 0) return; //TODO fix this later				
+			else
+			{
+				var channelData:ByteArray = readColorPlane(i, height, width, channelLength);
+				
+				if (channelData.length == 0) return; //TODO fix this later				
 
+				
+				if (channelID == -1)
+				{
+					channels[A] = channelData; 
+					//TODO implement [int(ch * opacity_devider) for ch in channel] ; from pascal
+				}
+				else if (channelID == 0)
+				{
+					channels[R] 	= channelData;
+				}
+				else if (channelID == 1)
+				{
+					channels[G] 	= channelData;
+				}
+				else if (channelID == 2)
+				{
+					channels[B] 	= channelData;
+				}
+				else if (channelID < -1)
+				{
+					channels[A] = channelData;
+					//TODO implement : [int(a * (c/255)) for a, c in zip(self.channels["a"], channel)] from pascal
+				}
+			}
 			
-			if (channelID == -1)
-			{
-				channels[A] = channelData; 
-				//TODO implement [int(ch * opacity_devider) for ch in channel] ; from pascal
-			}
-			else if (channelID == 0)
-			{
-				channels[R] 	= channelData;
-			}
-			else if (channelID == 1)
-			{
-				channels[G] 	= channelData;
-			}
-			else if (channelID == 2)
-			{
-				channels[B] 	= channelData;
-			}
-			else if (channelID < -1)
-			{
-				channels[A] = channelData;
-				//TODO implement : [int(a * (c/255)) for a, c in zip(self.channels["a"], channel)] from pascal
-			}
 		}
 		
-		renderImage(isTransparent);
+		
+		
+		if ((width * height) > 0)
+		{
+			renderImage(isTransparent);
+		}
+		//renderImage(isTransparent);
 	}
 
 	private function readColorPlane(planeNum:Int, height:Int, width:Int, channelLength:Int):ByteArray
 	{
 		var channelDataSize = width * height;
-		var isRLEncoded = false;
-		var imageData:ByteArray;
-		var i;
-
-		imageData = new ByteArray();
+		var imageData = new ByteArray();
 		
 		var compression = fileData.readShort();
-		isRLEncoded = (compression == 1);
+		var isRLEncoded = (compression == 1);
 		
 		if (isRLEncoded)
 		{
@@ -168,7 +175,7 @@ class PSDLayerBitmap
 	}
 
 
-	
+
 	public function unpack( packed:ByteArray, imageData:ByteArray ):Void 
 	{
 		var i:Int;

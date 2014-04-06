@@ -265,18 +265,17 @@ class PSDParser
 			case COMP_RLE:
 				//var lines:Array = new Array( canvas_height * numChannels );
 				var lines = [];
-				var i:Int;
 				
 				for(i in 0...(canvas_height * numChannels))
 				{
 					lines[i] = fileData.readUnsignedShort();
 				}
 				
+				var line:ByteArray = new ByteArray();
 				for(channel in 0...numChannels)
 				{
 					var data = new ByteArray();
 					
-					var line:ByteArray = new ByteArray();
 					for(i in 0...canvas_height)
 					{
 						line.length = 0;
