@@ -43,23 +43,29 @@ class PSDParser
 	public var allBitmaps				: Array<PSDLayerBitmap>; 	//array of all bitmap objects
 	public var composite_bmp			: BitmapData;
 	
-	//function new(blocker : Blocker, fromSingleton : Bool)
-	//{
-		//if (!fromSingleton || blocker == null) throw new Error("use getInstance");
-	//}
+	
+	
+	
 	function new()
 	{
 		
 	}
 	
-	public function parse(fileData:ByteArray):Void
+	
+	
+	public function parse(fileData:ByteArray, skipCompositeData:Bool = false):Void
 	{
 		this.fileData = fileData;
 		
 		readHeader();
 		readImageResources();
 		readLayerAndMaskInfo();
-		readCompositeData();
+		
+		// for speedup
+		if (!skipCompositeData)
+		{
+			readCompositeData();
+		}
 	}
 
 	private function readHeader() : Void 
@@ -359,8 +365,38 @@ class PSDParser
 
 	
 	
-	
-	
+	// return tree of nodes (layer of root == null)
+	// hidden - empty marker layers
+	public function getStructure(skipEndGroupMarkers:Bool = true):PSDStructureNode
+	{
+		var root = new PSDStructureNode(null);
+		var nodeStack = [root];
+		
+		var n = allLayers.length - 1;
+		while (n >= 0)
+		{
+			var layer = allLayers[n];
+			var newNode:PSDStructureNode = new PSDStructureNode(layer);
+			
+			var parent = nodeStack[nodeStack.length - 1];
+			if (!skipEndGroupMarkers || (layer.type != PSDLayer.LayerType_HIDDEN))
+			{
+				parent.addChild(newNode); // add to current parent
+			}
+			
+			switch(layer.type)
+			{
+				case PSDLayer.LayerType_FOLDER_OPEN : // new folder
+					nodeStack.push(newNode); // it will be new parent
+					
+				case PSDLayer.LayerType_HIDDEN : // end of folder
+					nodeStack.pop(); // group finished
+			}
+			n--;
+		}
+		
+		return root;
+	}
 	
 	
 	
@@ -376,6 +412,8 @@ class PSDParser
 	{ 
 		if (instance == null) instance = new PSDParser();
 		return instance;
-	}				
+	}
+	
+	
 }
 

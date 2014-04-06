@@ -200,16 +200,16 @@ class PSDLayer
 			switch (tag)
 			{
 				//------------------------------------------------------------- get layer ID
-				case "lyid": layerID 	= fileData.readInt(); break;
+				case "lyid": layerID 	= fileData.readInt();// break;
 				
 				//------------------------------------------------------------- get layer divider section
-				case "lsct": readLayerSectionDevider(); break;
+				case "lsct": readLayerSectionDevider();// break;
 				
 				//------------------------------------------------------------- get layer unicode name
-				case "luni": nameUNI 	= fileData.readUTFBytes(4); break;
+				case "luni": nameUNI 	= fileData.readUTFBytes(4);// break;
 				
 				//------------------------------------------------------------- get layer effects
-				case "lrFX": parseLayerEffects(); break;
+				case "lrFX": parseLayerEffects();// break;
 			}
 			
 			fileData.position += prevPos + size - fileData.position;
